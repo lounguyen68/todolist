@@ -76,6 +76,7 @@ class _HomeState extends State<Home> {
                             todo: todo,
                             onDeleteItem: _handleDeleteTodo,
                             onToDoToggled: _handleToggleTodo,
+                            onEditItem: _handleEditTodo,
                           ),
                         
                     ]
@@ -162,12 +163,28 @@ class _HomeState extends State<Home> {
     _saveToDo();
   }
 
+  void _handleEditTodo(String id, String text) {
+    List<ToDo> todoo = [];
+    setState(() {
+      for (ToDo todo in todoList) {
+        if (todo.id == id) {
+          todo.text = text;
+        }
+        todoo.add(todo);
+      }
+      todoList = todoo;
+      });
+    _saveToDo();
+  }
+
   void _addToDoItem(String text){
     setState(() {
-      todoList.add(ToDo(
-        id: DateTime.now().microsecondsSinceEpoch.toString(), 
-        text: text,
-      ));
+      if (text.isNotEmpty){
+        todoList.add(ToDo(
+          id: DateTime.now().microsecondsSinceEpoch.toString(), 
+          text: text,
+        ));
+      }
     });
     _todoController.clear();
     _saveToDo();
