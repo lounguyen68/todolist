@@ -1,3 +1,5 @@
+// ignore_for_file: unused_field, no_leading_underscores_for_local_identifiers
+
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
@@ -15,7 +17,22 @@ class Home extends StatefulWidget {
 class _HomeState extends State<Home> {
   late SharedPreferences prefs;
   List<ToDo> todoList = [];
+  List<ToDo> todoFilters = [];
+  final List<String> category = <String>['All', 'Done', 'Do'];
+  String dropdownValue = 'All';
   final _todoController = TextEditingController();
+
+  void _handleFilter(String value) {
+    setState(() {
+      if (value == 'Done'){
+        todoFilters = todoList.where((e) => e.isDone).toList();
+      } else if (value == 'Do'){
+        todoFilters = todoList.where((e) => !e.isDone).toList();
+      } else {
+        todoFilters = todoList;
+      }
+    });  
+  }
   
   void  _loadToDoList() async {
     prefs = await SharedPreferences.getInstance();
@@ -26,6 +43,7 @@ class _HomeState extends State<Home> {
         todoList.add(ToDo().fromJson(todo));
       });
     }
+    _handleFilter(dropdownValue);
   }
 
   void _saveToDo(){
@@ -57,21 +75,47 @@ class _HomeState extends State<Home> {
                 Expanded(
                   child: ListView(
                     children: [
-                      
                         Container(
-                          margin: const EdgeInsets.only(
-                            top: 50,
-                            bottom: 20
+                              margin: const EdgeInsets.only(
+                                top: 20,
+                                bottom: 10
+                              ),
+                              child:
+                                  const Text(
+                                    'Todos',
+                                    style: TextStyle(
+                                      fontSize: 30,
+                                      fontWeight: FontWeight.w500,
+                                    )
+                                  ),
                           ),
-                          child: const Text(
-                            'Todos',
-                            style: TextStyle(
-                              fontSize: 30,
-                              fontWeight: FontWeight.w500,
-                            )
-                          )
-                        ),
-                        for (ToDo todo in todoList)
+                        Container(
+                              margin: const EdgeInsets.only(
+                                // top: 10,
+                                bottom: 10,
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 5,
+                              ),
+                              child:
+                                  DropdownButton<String>(
+                                    value: dropdownValue,
+                                    elevation: 16,
+                                    style: const TextStyle(color: Colors.deepPurple),
+                                    onChanged: (String? value) {
+                                      dropdownValue = value!;
+                                      _handleFilter(dropdownValue);
+                                    },
+                                    items: category.map<DropdownMenuItem<String>>((String value) {
+                                      return DropdownMenuItem<String>(
+                                        value: value,
+                                        child: Text(value),
+                                      );
+                                    }).toList(),
+                                  ),
+                          ),
+                        for (ToDo todo in todoFilters)
                           TodoItem(
                             todo: todo,
                             onDeleteItem: _handleDeleteTodo,
@@ -130,15 +174,15 @@ class _HomeState extends State<Home> {
                   right:20,
                 ),
                 child: ElevatedButton(
-                  child: const Text("+", style: TextStyle(fontSize: 40),),
                   onPressed: (){
                     _addToDoItem(_todoController.text);
                   },
                   style: ElevatedButton.styleFrom(
-                    primary:const Color.fromRGBO(0, 191, 255, 1),
+                    backgroundColor: const Color.fromRGBO(0, 191, 255, 1),
                     minimumSize: const Size(60, 60),
                     elevation: 10,
                   ),
+                  child: const Text("+", style: TextStyle(fontSize: 40),),
                 ),
               )
             ]),
@@ -153,6 +197,7 @@ class _HomeState extends State<Home> {
     setState((){
       todo.isDone = !todo.isDone;
     });
+    _handleFilter(dropdownValue);
     _saveToDo();
   }
 
@@ -160,6 +205,7 @@ class _HomeState extends State<Home> {
     setState(() {
       todoList.removeWhere((element) => element.id == id);
     });
+    _handleFilter(dropdownValue);
     _saveToDo();
   }
 
@@ -187,6 +233,7 @@ class _HomeState extends State<Home> {
       }
     });
     _todoController.clear();
+    _handleFilter(dropdownValue);
     _saveToDo();
   }
 }
